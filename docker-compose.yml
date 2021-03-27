@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+  db-metzler:
+    container_name: db-metzler
+    image: postgres
+    restart: always
+    ports:
+      - '5435:5432'
+    volumes:
+      - ./docker/pddata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: db_password
+      POSTGRES_ROOT_PASSWORD: db_password
+      POSTGRES_DB: db_name
+      POSTGRES_USER: db_user
+    networks:
+      - db-metzler
+  php-metzler:
+    container_name: php-metzler
+    build: ./docker/php
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./:/var/www/:cached
+    depends_on:
+      - db-metzler
+    networks:
+      - db-metzler
+      - php-metzler
+  nginx-metzler:
+    container_name: nginx-metzler
+    build: docker/nginx
+    ports:
+      - "81:81"
+    depends_on:
+      - php-metzler
+    networks:
+      - php-metzler
+    volumes:
+      - ./:/var/www/:cached
+      - ./docker/logs/nginx-back:/var/log/nginx:cached
+
+volumes:
+  fias_symfony_database:
+networks:
+  db-metzler:
+  php-metzler:
